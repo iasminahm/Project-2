@@ -1,0 +1,329 @@
+#include <bits/stdc++.h>
+#include <string>
+#include <fstream>
+#include <unistd.h>
+//vezi daca randomul e facut corect
+//trebuie pus personajul figurantilor
+using namespace std;
+//actorii si figurantii se machiaza impreuna
+//actorii si crew-ul dorm in acelasi tip de camera
+int crewNumber = 681, actorNumber = 54, numberOfExtras = 132, numberOfPeople = 735, everybody = 867;
+string soup[29],mainDish[29],dessert[29];
+
+//creare fisier cu cast&crew + extras
+void read_record()
+{
+	fstream fin, cinn, fout;
+
+	// Open an existing file
+	fin.open("castcrew.csv", ios::in);
+    cinn.open("extras.csv", ios::in);
+    fout.open("people.csv",ios::out);
+
+
+	vector<string> row;
+	string line, word, temp;
+    int count = 0;
+
+	while (count != 735) {
+
+		row.clear();
+        
+		getline(fin, line);
+
+		// used for breaking words
+		stringstream s(line);
+
+		// read every column data of a row and
+		// store it in a string variable, 'word'
+		while (std::getline(s, word, ',')) {
+
+			// add all the column data
+			// of a row to a vector
+			row.push_back(word);
+		}
+        count ++;
+		fout << row[0] << ',' <<row[1]<<"\n";
+		
+	}
+
+    count = 0;
+    while (count != 132) {
+
+		row.clear();
+        
+		getline(cinn, line);
+
+		// used for breaking words
+		stringstream s(line);
+
+		// read every column data of a row and
+		// store it in a string variable, 'word'
+		while (std::getline(s, word, ',')) {
+
+			// add all the column data
+			// of a row to a vector
+			row.push_back(word);
+		}
+        count ++;
+        fout << row[0] << ',' <<row[1]<<"\n";
+		
+	}
+
+
+	fin.close();
+    cinn.close();
+    fout.close();
+}
+
+//clasa persoana
+class Persoana
+{
+public:
+char tipDieta[10], job[30];
+int camera;
+};
+
+//clasa actor (care include si figuranti)
+class Actori: public Persoana
+{
+    public:
+    char personaj[10];
+    int figurant;
+
+};
+
+/*initializam dieta,camera, job-ul si rolul ACTORI & FIGURANTI
+ei dorm in camere de 2 si au job-ul actor/actress*/
+Actori asignareActori(Actori actori)
+{
+    int nrandom;
+    char food[3][15]={"normal","vegetarian","pescetarian"};
+    char role[5][15] = {"Vampir","Werewolf","Sirena","Psychic","Human"};
+
+        nrandom = (rand() %3) + 1;
+        //dieta pentru actor
+        strcpy(actori.tipDieta, food[nrandom]); 
+        //tipul de camera
+        actori.camera = 2;
+        //job-ul pe care il are
+        nrandom = (rand() % 5) + 1;
+        strcpy(actori.job,"actor/actress");
+        //personajul pe care il joaca
+        strcpy(actori.personaj,role[nrandom]);
+        actori.figurant = 0;
+
+        return actori;
+    
+}
+/*initializam dieta, camera, job-ul pentru figuranti si crew
+ei dorm in camere de 2 si au job-ul crew
+*/
+Persoana asignareCrew(Persoana person)
+{
+  int  nrandom;
+  char food[3][15]={"normal","vegetarian","pescetarian"};
+  person.camera = 2;
+  strcpy(person.job,"crew");
+  nrandom = (rand() %3) + 1;
+  strcpy(person.tipDieta, food[nrandom]); 
+
+  return person;
+
+}
+/*initializam dieta, camera, job-ul pentru figuranti
+ei dorm in camere de 3 si au jobul de "extras" */
+Actori asignareFiguranti(Actori actori)
+{
+    int i, nrandom;
+    char food[3][15]={"normal","vegetarian","pescetarian"};
+    char role[5][15] = {"Vampir","Werewolf","Sirena","Psychic","Human"};
+
+    actori.camera = 3;
+    strcpy(actori.job , "extras");
+    nrandom = (rand() %3) + 1;
+    strcpy(actori.tipDieta, food[nrandom]); 
+    actori.figurant = 1;    
+
+    return actori;
+}
+
+
+//CALCULARE COST TOTAL
+double costTotal(Persoana member[813], Actori actor[54], int zile)
+{
+ int i;
+ int transport, cazare, machiaj, apa, mancare;
+ double pretTransport, pretCazare, pretMachiaj, pretLichide, pretMancare, pretTotal;
+ int nr_autocare, suc, cafea, reducere;
+ 
+ //TRANSPORT
+ nr_autocare = ceil(numberOfPeople/50);
+ if(numberOfPeople % 50 != 0)nr_autocare ++;
+ pretTransport = 5680 * nr_autocare *2; //dus intors
+ 
+ //LICHIDE
+ suc = ceil(0.8 * everybody);
+ apa = everybody;
+ cafea = ceil(0.5 * everybody);
+ pretLichide = suc* 4 + 30* cafea + everybody* 3; //pret pentru o zi
+ pretLichide *=zile;
+
+ //CASTEL
+ pretCazare = 10000;
+ reducere  = 2*floor(zile/10) * pretCazare/10; 
+ pretCazare = pretCazare*zile - reducere; 
+ 
+ //ACOMODARE
+ zile--;
+ pretCazare = ceil(crewNumber/2) * 350 * zile;
+ pretCazare = ceil(actorNumber/2)* 350 * zile;
+ pretCazare = ceil(numberOfExtras/3) * 420 * zile;
+ zile++;
+
+ //MACHIAJ SI MANCARE ACTORI
+ for(i = 1; i <= actorNumber; i++)
+ {
+    if(strcmp(actor[i].personaj,"Vampir") == 0) pretMachiaj += 230*zile;
+    else if(strcmp(actor[i].personaj,"Werewolf") == 0) pretMachiaj +=555*zile;
+    else if(strcmp(actor[i].personaj,"Sirena") == 0) pretMachiaj +=345*zile;
+    else if(strcmp(actor[i].personaj,"Psychic") == 0) pretMachiaj +=157*zile;
+    else if(strcmp(actor[i].personaj,"Human") == 0) pretMachiaj +=55*zile;
+
+    if(strcmp(actor[i].tipDieta,"normal") == 0) pretMancare +=40*zile;
+    if(strcmp(actor[i].tipDieta,"vegetarian") == 0) pretMancare +=33*zile;
+    if(strcmp(actor[i].tipDieta,"pescetarian") == 0) pretMancare +=46*zile;
+
+ }
+ 
+ //MANCARE CREW SI EXTRAS
+  for(i = 1; i <= crewNumber + numberOfExtras; i++)
+ {
+    if(strcmp(member[i].tipDieta,"normal") == 0) pretMancare += 40*zile;
+    if(strcmp(member[i].tipDieta,"vegetarian") == 0) pretMancare += 33*zile;
+    if(strcmp(member[i].tipDieta,"pescetarian") == 0) pretMancare += 46*zile;
+
+ }
+ //MACHIAJ FIGURANTI
+ pretTotal = pretTransport + pretMancare + pretMachiaj + pretCazare + pretLichide;
+ return pretTotal;
+
+}
+
+//CREARE MENIU MANCARE 3 ZILE
+void createMenu()
+{
+    /*supa,main,dessert
+    0-normal;  10-vegetarian; 20-pescetarian
+    */
+
+    fstream fin,fout;
+    int i,nrandom;
+    fin.open("meals.csv", ios::in);
+    fout.open("meniu in engleza.csv", ios::out);
+    //.........................................start creare vector meals
+    
+    for(i=1;i<=2;i++)
+	{
+	vector<string> row;
+	string line, word, temp;
+    int count = 0;
+
+	while (count <= 29) {
+
+		row.clear();
+        
+		getline(fin, line);
+		stringstream s(line);
+
+		while (std::getline(s, word, ',')) 
+			row.push_back(word);
+		
+        soup[count] = row[0];
+        mainDish[count] = row[1];
+        dessert[count] = row[2];
+        count ++;
+	}
+	fin.close();
+    //..........................................finish creare vector meals
+    
+
+    //GENERARE MENIU RANDOM 
+    std::random_device rd; // obtain a random number from hardware
+    std::mt19937 gen(rd()); // seed the generator
+    std::uniform_int_distribution<> distr(0, 9); // define the range
+    std::uniform_int_distribution<> b(10, 19); // define the range
+    std::uniform_int_distribution<> c(20, 29); // define the range
+     
+        //creare meniu normal
+        fout <<"Normal:\n";
+        for(int j = 1; j<=3; j++)
+        {
+        nrandom = distr(gen);
+        fout << soup[nrandom]<<',';
+        nrandom = distr(gen);
+        fout << mainDish[nrandom]<<',';
+        nrandom = distr(gen);
+        fout << dessert[nrandom]<<'\n';
+        }
+
+        //creare meniu vegetarian
+        fout <<"Vegetarian:\n";
+        for(int j = 1; j<=3; j++)
+        {
+        nrandom = b(gen);
+        fout << soup[nrandom]<<',';
+        nrandom = b(gen);
+        fout << mainDish[nrandom]<<',';
+        nrandom = b(gen);
+        fout << dessert[nrandom]<<'\n';}
+        
+        //creare meniu pescetarian
+        fout <<"Pescetarian:\n";
+        for(int j = 1; j<=3; j++)
+        {
+        nrandom = c(gen);
+        fout << soup[nrandom]<<',';
+        nrandom = c(gen);
+        fout << mainDish[nrandom]<<',';
+        nrandom = c(gen);
+        fout << dessert[nrandom]<<'\n';}
+        
+    fout.close();
+    
+    if(i==1)
+    {fin.open("feluri.csv", ios::in);
+    fout.open("meniu in romana.csv", ios::out);}
+    }
+    //.................................................FINISH GENERARE
+}
+
+
+int main()
+{
+ int i;
+ read_record();
+ Persoana member[685]; //crew si figuranti
+ Actori actor[186];
+
+ //asignareActori();
+ for(i = 0; i <= crewNumber; i++)
+    member[i] = asignareCrew(member[i]);
+    
+ for(i = 0; i<=actorNumber; i++)
+    actor[i] = asignareActori(actor[i]);
+ 
+ for(i = actorNumber; i<=actorNumber + numberOfExtras; i++)
+    actor[i] = asignareFiguranti(actor[i]);
+ 
+ 
+
+ createMenu();
+ 
+ return 0;
+
+//am pus tipul de dieta si tipul de camera pentru toata lumea in 2 vectori: actori si membrii
+//acum urmeaza sa fie calculat pretul pentru 20,45,60,100 zile
+//acum trebuie creat fisierul cu costurile
+
+}
